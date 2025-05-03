@@ -339,8 +339,26 @@
 
         // Add a clear data button (optional)
         function clearSavedData() {
+            // Clear localStorage
             localStorage.removeItem('budgetData');
+            
+            // Reset form fields
             document.getElementById('budget-form').reset();
+            
+            // Hide results area
+            document.getElementById('results-area').classList.add('hidden');
+            
+            // Hide chart container
+            document.getElementById('chart-container').classList.add('hidden');
+            
+            // Hide export options
+            document.getElementById('export-options').classList.add('hidden');
+            
+            // Destroy chart if it exists to prevent ghost chart issues
+            if (budgetChart) {
+                budgetChart.destroy();
+                budgetChart = null;
+            }
         }
 
         document.getElementById('clear-btn').addEventListener('click', clearSavedData);
