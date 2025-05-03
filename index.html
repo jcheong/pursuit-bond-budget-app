@@ -259,7 +259,7 @@
             <p class="clearfix"><strong>Remaining Income After Expenses:</strong> <span id="remaining-income" class="income-remaining"></span></p>
         </div>
 
-        <div class="export-options" id="export-options">
+        <div class="export-options hidden" id="export-options">
             <button type="button" id="export-pdf-btn" class="btn" style="background-color: #28a745; margin-top: 15px;">
                 Export to PDF
             </button>
@@ -400,6 +400,9 @@
             // 7. Update or Create Chart
             renderBudgetChart(rent, utilities, food, transportation, otherExpenses, bondPayment, remainingIncome);
             chartContainer.classList.remove('hidden'); // Show chart container
+
+            // Show export options
+            document.getElementById('export-options').classList.remove('hidden');
         }
 
         // --- Chart Rendering Logic ---
@@ -515,21 +518,6 @@
                 localStorage.setItem('theme', 'light');
             }
         });
-
-        // Initially hide the export options
-        document.getElementById('export-options').classList.add('hidden');
-        
-        // Show export options when results are displayed
-        function showExportOptions() {
-            document.getElementById('export-options').classList.remove('hidden');
-        }
-        
-        // Update your calculateAndDisplayBudget function to call showExportOptions
-        const originalCalculateAndDisplayBudget = calculateAndDisplayBudget;
-        calculateAndDisplayBudget = function() {
-            originalCalculateAndDisplayBudget();
-            showExportOptions();
-        };
 
         // PDF Export functionality
         const exportPdfBtn = document.getElementById('export-pdf-btn');
