@@ -120,13 +120,13 @@
 
         /* Chart Area */
         .chart-container {
-            margin-top: 30px;
+            margin: 30px auto;
             position: relative;
             height: 350px; /* Adjust height as needed */
             width: 100%;
-            max-width: 400px; /* Max width for the chart */
-            margin-left: auto;
-            margin-right: auto; /* Center the chart */
+            max-width: 100%; /* Allow chart to use full container width */
+            padding: 0 20px; /* Add some padding on the sides */
+            box-sizing: border-box; /* Include padding in width calculation */
         }
 
         /* Responsive Design */
@@ -142,6 +142,7 @@
             }
             .chart-container {
                 height: 300px;
+                padding: 0 10px;
             }
         }
 
@@ -480,10 +481,18 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Allow chart to fill container height
+                    maintainAspectRatio: false, /* Allow chart to fill container height */
                     plugins: {
                         legend: {
-                            position: 'top', // Or 'bottom', 'left', 'right'
+                            position: 'top',
+                            display: true,
+                            labels: {
+                                boxWidth: 12,
+                                padding: 10,
+                                font: {
+                                    size: 11 /* Smaller font for legend to fit better */
+                                }
+                            }
                         },
                         tooltip: {
                             callbacks: {
@@ -502,10 +511,6 @@
                                     return label;
                                 }
                             }
-                        },
-                        title: {
-                            display: false, // Title is already above the chart
-                            text: 'Monthly Budget Breakdown'
                         }
                     }
                 }
