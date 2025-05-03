@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pursuit Bond Budget Calculator</title>
+    <!-- Include Chart.js library from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Basic Styling & Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #5a5a5a;
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        /* Button Styling */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Results Area Styling */
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .results h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .results p {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #ccc;
+        }
+        .results p:last-child {
+            border-bottom: none;
+        }
+
+        .results span {
+            font-weight: bold;
+            float: right; /* Align values to the right */
+            color: #0056b3;
+        }
+         .results span.bond-no {
+            color: #dc3545; /* Red for no bond */
+        }
+         .results span.bond-yes {
+            color: #28a745; /* Green for bond applied */
+        }
+        .results span.income-remaining {
+            color: #17a2b8; /* Teal for remaining */
+        }
+
+
+        /* Chart Area */
+        .chart-container {
+            margin-top: 30px;
+            position: relative;
+            height: 350px; /* Adjust height as needed */
+            width: 100%;
+            max-width: 400px; /* Max width for the chart */
+            margin-left: auto;
+            margin-right: auto; /* Center the chart */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .results p {
+                font-size: 1rem;
+            }
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        /* Utility Class */
+        .hidden {
+            display: none;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Pursuit Bond Budget Calculator</h1>
+
+        <form id="budget-form">
+            <div class="form-group">
+                <label for="annual-salary">Annual Gross Salary ($):</label>
+                <input type="number" id="annual-salary" placeholder="e.g., 90000" required min="0" step="1000">
+            </div>
+
+            <h2>Monthly Expenses ($)</h2>
+            <div class="form-group">
+                <label for="rent-mortgage">Rent / Mortgage:</label>
+                <input type="number" id="rent-mortgage" placeholder="e.g., 1500" min="0" step="50">
+            </div>
+            <div class="form-group">
+                <label for="utilities">Utilities (Electric, Gas, Water, Internet):</label>
+                <input type="number" id="utilities" placeholder="e.g., 200" min="0" step="10">
+            </div>
+            <div class="form-group">
+                <label for="food">Food / Groceries:</label>
+                <input type="number" id="food" placeholder="e.g., 400" min="0" step="10">
+            </div>
+            <div class="form-group">
+                <label for="transportation">Transportation (Car Payment, Gas, Public Transit):</label>
+                <input type="number" id="transportation" placeholder="e.g., 300" min="0" step="10">
+            </div>
+             <div class="form-group">
+                <label for="other-expenses">Other Monthly Expenses:</label>
+                <input type="number" id="other-expenses" placeholder="e.g., 250" min="0" step="10">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" id="clear-btn" class="btn" style="background-color: #dc3545;">Clear Data</button>
+                <button type="button" id="calculate-btn" class="btn">Calculate Budget</button>
+            </div>
+        </form>
+
+        <div id="results-area" class="results hidden">
+            <h2>Monthly Budget Breakdown</h2>
+            <p class="clearfix">Monthly Gross Income: <span id="monthly-income"></span></p>
+            <p class="clearfix">Pursuit Bond Payment Status: <span id="bond-status"></span></p>
+            <p class="clearfix">Pursuit Bond Payment Amount: <span id="bond-payment"></span></p>
+            <p class="clearfix">Total Monthly Expenses (incl. Bond): <span id="total-expenses"></span></p>
+            <hr style="margin: 10px 0; border-top: 1px solid #bbb;">
+            <p class="clearfix"><strong>Remaining Income After Expenses:</strong> <span id="remaining-income" class="income-remaining"></span></p>
+        </div>
+
+        <div class="chart-container hidden" id="chart-container">
+             <h2>Budget Visualization</h2>
+            <canvas id="budget-chart"></canvas>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const calculateBtn = document.getElementById('calculate-btn');
+        const annualSalaryInput = document.getElementById('annual-salary');
+        const rentInput = document.getElementById('rent-mortgage');
+        const utilitiesInput = document.getElementById('utilities');
+        const foodInput = document.getElementById('food');
+        const transportationInput = document.getElementById('transportation');
+        const otherExpensesInput = document.getElementById('other-expenses');
+
+        const resultsArea = document.getElementById('results-area');
+        const monthlyIncomeDisplay = document.getElementById('monthly-income');
+        const bondStatusDisplay = document.getElementById('bond-status');
+        const bondPaymentDisplay = document.getElementById('bond-payment');
+        const totalExpensesDisplay = document.getElementById('total-expenses');
+        const remainingIncomeDisplay = document.getElementById('remaining-income');
+
+        const chartContainer = document.getElementById('chart-container');
+        const chartCanvas = document.getElementById('budget-chart');
+        let budgetChart = null; // Variable to hold the chart instance
+
+        // --- Constants ---
+        const BOND_THRESHOLD = 85000; // Annual salary threshold for Bond payment
+        const BOND_RATE = 0.15;       // 15% of monthly gross income
+
+        // --- Helper Function ---
+        function formatCurrency(amount) {
+            // Formats number as USD currency
+            return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        }
+
+        // --- Event Listeners ---
+        calculateBtn.addEventListener('click', function() {
+            calculateAndDisplayBudget();
+            saveFormData(); // Save data after calculation
+        });
+
+        // Load saved data when page loads
+        document.addEventListener('DOMContentLoaded', loadSavedData);
+
+        // --- Data Persistence Functions ---
+        function saveFormData() {
+            const formData = {
+                salary: annualSalaryInput.value,
+                rent: rentInput.value,
+                utilities: utilitiesInput.value,
+                food: foodInput.value,
+                transportation: transportationInput.value,
+                other: otherExpensesInput.value
+            };
+            localStorage.setItem('budgetData', JSON.stringify(formData));
+        }
+
+        function loadSavedData() {
+            const savedData = JSON.parse(localStorage.getItem('budgetData'));
+            if (savedData) {
+                annualSalaryInput.value = savedData.salary || '';
+                rentInput.value = savedData.rent || '';
+                utilitiesInput.value = savedData.utilities || '';
+                foodInput.value = savedData.food || '';
+                transportationInput.value = savedData.transportation || '';
+                otherExpensesInput.value = savedData.other || '';
+            }
+        }
+
+        // Add a clear data button (optional)
+        function clearSavedData() {
+            localStorage.removeItem('budgetData');
+            document.getElementById('budget-form').reset();
+        }
+
+        document.getElementById('clear-btn').addEventListener('click', clearSavedData);
+
+        // --- Calculation and Display Logic ---
+        function calculateAndDisplayBudget() {
+            // 1. Get and Validate Inputs
+            const annualSalary = parseFloat(annualSalaryInput.value);
+            if (isNaN(annualSalary) || annualSalary < 0) {
+                alert("Please enter a valid Annual Salary.");
+                annualSalaryInput.focus();
+                return;
+            }
+
+            // Get expense inputs, defaulting to 0 if empty or invalid
+            const rent = parseFloat(rentInput.value) || 0;
+            const utilities = parseFloat(utilitiesInput.value) || 0;
+            const food = parseFloat(foodInput.value) || 0;
+            const transportation = parseFloat(transportationInput.value) || 0;
+            const otherExpenses = parseFloat(otherExpensesInput.value) || 0;
+
+            // 2. Calculate Monthly Income
+            const monthlyIncome = annualSalary / 12;
+
+            // 3. Determine and Calculate Bond Payment
+            let bondPayment = 0;
+            let bondStatus = "Not Applicable (Salary below $85,000)";
+            let bondStatusClass = 'bond-no'; // CSS class for styling
+
+            if (annualSalary >= BOND_THRESHOLD) {
+                bondPayment = monthlyIncome * BOND_RATE;
+                bondStatus = "Applicable (Salary ≥ $85,000)";
+                bondStatusClass = 'bond-yes'; // CSS class for styling
+                // NOTE: This calculator only shows the *current* monthly payment.
+                // It doesn't track the total paid, number of payments, or time elapsed
+                // mentioned in the Bond payment stopping conditions.
+            }
+
+            // 4. Calculate Total Expenses
+            const totalUserExpenses = rent + utilities + food + transportation + otherExpenses;
+            const totalMonthlyExpenses = totalUserExpenses + bondPayment;
+
+            // 5. Calculate Remaining Income
+            const remainingIncome = monthlyIncome - totalMonthlyExpenses;
+
+            // 6. Update Display Area
+            monthlyIncomeDisplay.textContent = formatCurrency(monthlyIncome);
+            bondStatusDisplay.textContent = bondStatus;
+            bondStatusDisplay.className = bondStatusClass; // Apply class for color
+            bondPaymentDisplay.textContent = formatCurrency(bondPayment);
+            totalExpensesDisplay.textContent = formatCurrency(totalMonthlyExpenses);
+            remainingIncomeDisplay.textContent = formatCurrency(remainingIncome);
+            remainingIncomeDisplay.style.color = remainingIncome < 0 ? '#dc3545' : '#17a2b8'; // Red if negative
+
+            resultsArea.classList.remove('hidden'); // Show results
+
+            // 7. Update or Create Chart
+            renderBudgetChart(rent, utilities, food, transportation, otherExpenses, bondPayment, remainingIncome);
+            chartContainer.classList.remove('hidden'); // Show chart container
+        }
+
+        // --- Chart Rendering Logic ---
+        function renderBudgetChart(rent, utilities, food, transportation, other, bond, remaining) {
+            const ctx = chartCanvas.getContext('2d');
+
+            // Data for the chart
+            const expenseLabels = [];
+            const expenseData = [];
+            const backgroundColors = [
+                '#FF6384', // Rent
+                '#36A2EB', // Utilities
+                '#FFCE56', // Food
+                '#4BC0C0', // Transportation
+                '#9966FF', // Other
+                '#FF9F40', // Bond Payment
+                '#C9CBCF'  // Remaining (optional, uncomment to include)
+            ];
+            const borderColors = backgroundColors.map(color => color.replace(')', ', 0.8)').replace('rgb', 'rgba')); // Slightly darker border
+
+
+            // Add expenses to chart data if they are greater than 0
+            if (rent > 0) { expenseLabels.push('Rent/Mortgage'); expenseData.push(rent); }
+            if (utilities > 0) { expenseLabels.push('Utilities'); expenseData.push(utilities); }
+            if (food > 0) { expenseLabels.push('Food'); expenseData.push(food); }
+            if (transportation > 0) { expenseLabels.push('Transportation'); expenseData.push(transportation); }
+            if (other > 0) { expenseLabels.push('Other Expenses'); expenseData.push(other); }
+            if (bond > 0) { expenseLabels.push('Bond Payment'); expenseData.push(bond); }
+            // Option: Include remaining income in the pie chart (can make it harder to compare expenses)
+             if (remaining > 0) {
+                 expenseLabels.push('Remaining Income');
+                 expenseData.push(remaining);
+             } else {
+                 // Ensure colors array matches data length if remaining is not added or negative
+                 backgroundColors.pop();
+                 borderColors.pop();
+             }
+
+
+            // Destroy previous chart instance if it exists
+            if (budgetChart) {
+                budgetChart.destroy();
+            }
+
+            // Create new chart instance
+            budgetChart = new Chart(ctx, {
+                type: 'pie', // Or 'doughnut' for a different look
+                data: {
+                    labels: expenseLabels,
+                    datasets: [{
+                        label: 'Monthly Budget Breakdown',
+                        data: expenseData,
+                        backgroundColor: backgroundColors.slice(0, expenseData.length), // Match colors to data items
+                        borderColor: borderColors.slice(0, expenseData.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allow chart to fill container height
+                    plugins: {
+                        legend: {
+                            position: 'top', // Or 'bottom', 'left', 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatCurrency(context.parsed);
+                                    }
+                                    // Calculate percentage
+                                    const total = context.dataset.data.reduce((acc, value) => acc + value, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1) + '%';
+                                    label += ` (${percentage})`;
+                                    return label;
+                                }
+                            }
+                        },
+                        title: {
+                            display: false, // Title is already above the chart
+                            text: 'Monthly Budget Breakdown'
+                        }
+                    }
+                }
+            });
+        }
+
+    </script>
+
+</body>
+</html>

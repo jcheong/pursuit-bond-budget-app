@@ -1,0 +1,35 @@
+/* Add media queries for better mobile experience */
+@media (max-width: 480px) {
+  .container {
+    padding: 15px;
+  }
+  .form-group input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.2rem;
+  }
+  .btn {
+    padding: 10px;
+  }
+  .results {
+    padding: 15px;
+  }
+  .chart-container {
+    height: 250px;
+  }
+}
+
+/* Add tablet breakpoint */
+@media (min-width: 481px) and (max-width: 768px) {
+  .container {
+    padding: 20px;
+    margin: 20px auto;
+  }
+  .chart-container {
+    height: 300px;
+  }
+}
