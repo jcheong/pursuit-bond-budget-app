@@ -6,6 +6,9 @@
     <title>Pursuit Bond Budget Calculator</title>
     <!-- Include Chart.js library from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add jsPDF library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Basic Styling & Reset */
         * {
@@ -254,6 +257,12 @@
             <p class="clearfix">Total Monthly Expenses (incl. Bond): <span id="total-expenses"></span></p>
             <hr style="margin: 10px 0; border-top: 1px solid #bbb;">
             <p class="clearfix"><strong>Remaining Income After Expenses:</strong> <span id="remaining-income" class="income-remaining"></span></p>
+        </div>
+
+        <div class="export-options" id="export-options">
+            <button type="button" id="export-pdf-btn" class="btn" style="background-color: #28a745; margin-top: 15px;">
+                Export to PDF
+            </button>
         </div>
 
         <div class="chart-container hidden" id="chart-container">
@@ -506,6 +515,145 @@
                 localStorage.setItem('theme', 'light');
             }
         });
+
+        // Initially hide the export options
+        document.getElementById('export-options').classList.add('hidden');
+        
+        // Show export options when results are displayed
+        function showExportOptions() {
+            document.getElementById('export-options').classList.remove('hidden');
+        }
+        
+        // Update your calculateAndDisplayBudget function to call showExportOptions
+        const originalCalculateAndDisplayBudget = calculateAndDisplayBudget;
+        calculateAndDisplayBudget = function() {
+            originalCalculateAndDisplayBudget();
+            showExportOptions();
+        };
+
+        // PDF Export functionality
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        exportPdfBtn.addEventListener('click', function() {
+            generatePDF();
+        });
+
+        function generatePDF() {
+            // Get the data from the results
+            const annualSalary = parseFloat(annualSalaryInput.value);
+            const monthlyIncome = annualSalary / 12;
+            const rent = parseFloat(rentInput.value) || 0;
+            const utilities = parseFloat(utilitiesInput.value) || 0;
+            const food = parseFloat(foodInput.value) || 0;
+            const transportation = parseFloat(transportationInput.value) || 0;
+            const otherExpenses = parseFloat(otherExpensesInput.value) || 0;
+            
+            // Calculate bond payment
+            let bondPayment = 0;
+            if (annualSalary >= BOND_THRESHOLD) {
+                bondPayment = monthlyIncome * BOND_RATE;
+            }
+            
+            const totalExpenses = rent + utilities + food + transportation + otherExpenses + bondPayment;
+            const remainingIncome = monthlyIncome - totalExpenses;
+            
+            // Create PDF document
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.text('Pursuit Bond Budget Summary', 105, 15, { align: 'center' });
+            
+            // Add date
+            const today = new Date();
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${today.toLocaleDateString()}`, 105, 22, { align: 'center' });
+            
+            // Add income section
+            doc.setFontSize(14);
+            doc.text('Income', 20, 35);
+            
+            // Create income table
+            doc.autoTable({
+                startY: 40,
+                head: [['Income Source', 'Amount']],
+                body: [
+                    ['Annual Gross Salary', formatCurrency(annualSalary)],
+                    ['Monthly Gross Income', formatCurrency(monthlyIncome)]
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: [0, 123, 255] }
+            });
+            
+            // Add expenses section
+            doc.setFontSize(14);
+            doc.text('Monthly Expenses', 20, doc.lastAutoTable.finalY + 15);
+            
+            // Create expenses table
+            const expensesData = [
+                ['Rent / Mortgage', formatCurrency(rent)],
+                ['Utilities', formatCurrency(utilities)],
+                ['Food / Groceries', formatCurrency(food)],
+                ['Transportation', formatCurrency(transportation)],
+                ['Other Expenses', formatCurrency(otherExpenses)]
+            ];
+            
+            // Add bond payment if applicable
+            if (bondPayment > 0) {
+                expensesData.push(['Pursuit Bond Payment (15%)', formatCurrency(bondPayment)]);
+            }
+            
+            // Add total expenses
+            expensesData.push(['Total Monthly Expenses', formatCurrency(totalExpenses)]);
+            
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 20,
+                head: [['Expense Category', 'Amount']],
+                body: expensesData,
+                theme: 'grid',
+                headStyles: { fillColor: [220, 53, 69] }
+            });
+            
+            // Add summary section
+            doc.setFontSize(14);
+            doc.text('Monthly Summary', 20, doc.lastAutoTable.finalY + 15);
+            
+            // Create summary table
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 20,
+                head: [['Description', 'Amount']],
+                body: [
+                    ['Monthly Income', formatCurrency(monthlyIncome)],
+                    ['Total Expenses', formatCurrency(totalExpenses)],
+                    ['Remaining Income', formatCurrency(remainingIncome)]
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: [40, 167, 69] }
+            });
+            
+            // Add notes section
+            doc.setFontSize(12);
+            doc.text('Notes:', 20, doc.lastAutoTable.finalY + 15);
+            doc.setFontSize(10);
+            
+            let notesY = doc.lastAutoTable.finalY + 20;
+            
+            // Add bond note if applicable
+            if (bondPayment > 0) {
+                doc.text('• Pursuit Bond payment is 15% of monthly gross income for salaries at or above $85,000.', 20, notesY);
+                notesY += 7;
+            } else {
+                doc.text('• Pursuit Bond payment is not applicable for salaries below $85,000.', 20, notesY);
+                notesY += 7;
+            }
+            
+            doc.text('• This budget summary is for planning purposes only.', 20, notesY);
+            notesY += 7;
+            doc.text('• Generated by Pursuit Bond Budget Calculator.', 20, notesY);
+            
+            // Save the PDF
+            doc.save('pursuit-bond-budget.pdf');
+        }
     </script>
 
 </body>
