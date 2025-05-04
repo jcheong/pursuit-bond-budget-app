@@ -15,10 +15,6 @@ This calculator helps Pursuit graduates understand how their ISA bond payments w
 - Dark mode support for comfortable viewing
 - Responsive design for mobile, tablet, and desktop
 
-## Screenshot
-
-![Pursuit Bond Calculator Screenshot](screenshot.png)
-
 ## How to Use
 
 1. Enter your annual gross salary
